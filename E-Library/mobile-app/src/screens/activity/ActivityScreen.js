@@ -14,7 +14,7 @@ const { width } = Dimensions.get('window');
 const ACCENT = '#FF6B6B';
 const COLORS = ['#FF6B6B', '#4ECDC4', '#FF9F1C', '#1A535C', '#6C5CE7', '#A8E6CF'];
 
-export default function ActivityScreen() {
+export default function ActivityScreen({ navigation }) {
   const { colors, dark } = useTheme();
   const [history, setHistory] = useState([]);
 
@@ -142,7 +142,16 @@ export default function ActivityScreen() {
                 return (
                   <View key={idx} style={styles.timelineItem}>
                     <View style={[styles.dot, { backgroundColor: dotColor, borderColor: colors.surface }]} />
-                    <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                    <TouchableOpacity 
+                      style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                      onPress={() => navigation.navigate('Reader', {
+                        bookId: item.bookId?._id || item.bookId,
+                        bookTitle: item.title || item.bookTitle,
+                        pdfUrl: item.pdfUrl,
+                        totalPages: totalPages,
+                        initialPage: pageNumber
+                      })}
+                    >
                       <View style={styles.cardHeader}>
                         <Text style={[styles.dateText, { color: colors.textSecondary }]}>{formatDate(item.lastReadAt)}</Text>
                         {idx === 0 && !filter && (
@@ -179,7 +188,7 @@ export default function ActivityScreen() {
                         </View>
                       )}
 
-                    </View>
+                    </TouchableOpacity>
                   </View>
                 );
               })}

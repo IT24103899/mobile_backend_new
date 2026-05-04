@@ -28,7 +28,7 @@
     },
     "extra": {
       "eas": {
-        "projectId": "5fffa7d8-b792-4679-b65c-223f5b3898a1"
+        "projectId": "ed87f8f0-6c9f-489b-84ad-5544b0cf95b0"
       }
     },
     "plugins": [
@@ -47,6 +47,6 @@
       "expo-document-picker",
       "expo-font"
     ],
-    "owner": "bharanamihijaya"
+    "owner": "thataha"
   }
 }

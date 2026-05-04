@@ -163,13 +163,15 @@ export default function UserDashboardScreen({ navigation }) {
               <TouchableOpacity style={styles.avatarContainer} onPress={() => navigation.navigate('Profile')}>
                 {user?.profileImage && !imgError ? (
                   <Image 
-                    source={{ uri: `${API_BASE_URL.replace('/api/', '').replace(/\/$/, '')}/${user.profileImage.replace(/^\//, '')}?v=${profileVersion}` }} 
+                    source={{ 
+                      uri: `${(API_BASE_URL || '').replace('/api/', '').replace(/\/$/, '')}/${(user?.profileImage || '').replace(/^\//, '')}?v=${profileVersion}` 
+                    }} 
                     style={styles.avatarImage} 
                     onError={() => setImgError(true)}
                   />
                 ) : (
                   <LinearGradient colors={['#4f46e5', '#a855f7']} style={styles.avatar}>
-                    <Text style={styles.avatarText}>{(user?.name || '?')[0].toUpperCase()}</Text>
+                    <Text style={styles.avatarText}>{(user?.name || 'E')[0].toUpperCase()}</Text>
                   </LinearGradient>
                 )}
               </TouchableOpacity>
