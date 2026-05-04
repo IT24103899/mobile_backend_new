@@ -12,8 +12,8 @@ export default function BookDetailScreen({ route, navigation }) {
   const { book } = route.params;
   const { user } = useAuth();
   const { colors, dark } = useTheme();
-  const [adding, setAdding] = useState(false);
-  const [showListPicker, setShowListPicker] = useState(false);
+  const [wishlists, setWishlists] = useState([]);
+  const [loadingWishlists, setLoadingWishlists] = useState(false);
 
   const handleAddToBookshelf = async (listType) => {
     setAdding(true);
@@ -27,6 +27,29 @@ export default function BookDetailScreen({ route, navigation }) {
     } finally {
       setAdding(false);
     }
+  };
+
+  const handleAddToCustomWishlist = async (wishlistId, name) => {
+    setAdding(true);
+    setShowListPicker(false);
+    try {
+      await addBookToWishlist(wishlistId, book._id);
+      Alert.alert('⭐ Added!', `"${book.title}" added to your "${name}" wishlist.`);
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Failed to add to wishlist';
+      Alert.alert('Notice', msg);
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  const fetchUserWishlists = async () => {
+    setLoadingWishlists(true);
+    try {
+      const res = await getWishlists();
+      setWishlists(res.data || []);
+    } catch (_) {}
+    setLoadingWishlists(false);
   };
 
   return (
@@ -103,7 +126,7 @@ export default function BookDetailScreen({ route, navigation }) {
 
             <TouchableOpacity
               style={[styles.bookshelfBtn, { borderColor: colors.primary }]}
-              onPress={() => setShowListPicker(true)}
+              onPress={() => { setShowListPicker(true); fetchUserWishlists(); }}
               disabled={adding}
             >
               <Ionicons name="add-circle-outline" size={20} color={colors.primary} />
@@ -130,21 +153,44 @@ export default function BookDetailScreen({ route, navigation }) {
       {/* List picker modal */}
       {showListPicker && (
         <View style={styles.pickerOverlay}>
-          <View style={styles.pickerCard}>
-            <Text style={styles.pickerTitle}>Add to which list?</Text>
-            {['favourites', 'reading', 'wishlist'].map((list) => (
-              <TouchableOpacity
-                key={list}
-                style={styles.pickerOption}
-                onPress={() => handleAddToBookshelf(list)}
-              >
-                <Ionicons
-                  name={list === 'favourites' ? 'heart-outline' : list === 'reading' ? 'glasses-outline' : 'time-outline'}
-                  size={20} color="#1e3a5f"
-                />
-                <Text style={styles.pickerOptionText}>{list.charAt(0).toUpperCase() + list.slice(1)}</Text>
-              </TouchableOpacity>
-            ))}
+          <View style={[styles.pickerCard, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.pickerTitle, { color: colors.text }]}>Add to which list?</Text>
+            <ScrollView style={{ maxHeight: 350 }}>
+              {/* Default Lists */}
+              {['favourites', 'reading', 'wishlist'].map((list) => (
+                <TouchableOpacity
+                  key={list}
+                  style={[styles.pickerOption, { borderColor: colors.border }]}
+                  onPress={() => handleAddToBookshelf(list)}
+                >
+                  <Ionicons
+                    name={list === 'favourites' ? 'heart-outline' : list === 'reading' ? 'glasses-outline' : 'time-outline'}
+                    size={22} color="#4f46e5"
+                  />
+                  <Text style={[styles.pickerOptionText, { color: colors.text }]}>{list.charAt(0).toUpperCase() + list.slice(1)}</Text>
+                </TouchableOpacity>
+              ))}
+
+              {/* Custom Wishlists */}
+              {wishlists.length > 0 && (
+                <>
+                  <Text style={[styles.customListHeader, { color: colors.textSecondary }]}>CUSTOM WISHLISTS</Text>
+                  {wishlists.map((wl) => (
+                    <TouchableOpacity
+                      key={wl._id}
+                      style={[styles.pickerOption, { borderColor: colors.border }]}
+                      onPress={() => handleAddToCustomWishlist(wl._id, wl.name)}
+                    >
+                      <Ionicons name="star-outline" size={22} color="#c471ed" />
+                      <Text style={[styles.pickerOptionText, { color: colors.text }]}>{wl.name}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </>
+              )}
+              
+              {loadingWishlists && <ActivityIndicator color="#4f46e5" style={{ marginTop: 15 }} />}
+            </ScrollView>
+
             <TouchableOpacity style={styles.pickerCancel} onPress={() => setShowListPicker(false)}>
               <Text style={styles.pickerCancelText}>Cancel</Text>
             </TouchableOpacity>
@@ -207,4 +253,5 @@ const styles = StyleSheet.create({
   pickerOptionText: { fontSize: 16, color: '#1e293b', fontWeight: '800' },
   pickerCancel: { paddingVertical: 15, alignItems: 'center', marginTop: 15 },
   pickerCancelText: { color: '#ef4444', fontWeight: '900', fontSize: 16 },
+  customListHeader: { fontSize: 11, fontWeight: '900', marginTop: 25, marginBottom: 10, letterSpacing: 1.5, paddingLeft: 5 },
 });

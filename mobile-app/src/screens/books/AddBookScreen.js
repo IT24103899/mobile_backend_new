@@ -16,8 +16,8 @@ export default function AddBookScreen({ navigation }) {
   const [author, setAuthor] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
-  const [coverUri, setCoverUri] = useState(null);
-  const [pdfUri, setPdfUri] = useState(null);
+  const [coverUrl, setCoverUrl] = useState('');
+  const [pdfUrl, setPdfUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
@@ -30,45 +30,21 @@ export default function AddBookScreen({ navigation }) {
     return Object.keys(e).length === 0;
   };
 
-  const pickCover = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 0.8,
-    });
-    if (!result.canceled) setCoverUri(result.assets[0].uri);
-  };
-
-  const pickPdf = async () => {
-    try {
-      const result = await DocumentPicker.getDocumentAsync({ type: 'application/pdf' });
-      if (!result.canceled) setPdfUri(result.assets[0].uri);
-    } catch (err) {
-      console.log('PDF Picker Error:', err);
-    }
-  };
-
   const handleSubmit = async () => {
     if (!validate()) return;
     setLoading(true);
     try {
-      const formData = new FormData();
-      formData.append('title', title.trim());
-      formData.append('author', author.trim());
-      formData.append('description', description.trim());
-      formData.append('category', category);
-      
-      if (coverUri) {
-        const filename = coverUri.split('/').pop();
-        const match = /\.(\w+)$/.exec(filename);
-        const type = match ? `image/${match[1]}` : `image`;
-        formData.append('cover', { uri: coverUri, name: filename, type });
-      }
-      
-      if (pdfUri) {
-        formData.append('pdf', { uri: pdfUri, name: 'book.pdf', type: 'application/pdf' });
-      }
+      // Switched from FormData to JSON for URL-based submission
+      const bookData = {
+        title: title.trim(),
+        author: author.trim(),
+        description: description.trim(),
+        category,
+        coverUrl: coverUrl.trim(),
+        pdfUrl: pdfUrl.trim()
+      };
 
-      await createBook(formData);
+      await createBook(bookData);
       Alert.alert('Success', 'Book added successfully!', [{ text: 'Great', onPress: () => navigation.goBack() }]);
     } catch (err) {
       console.error('Add Book Error:', err);
@@ -91,10 +67,15 @@ export default function AddBookScreen({ navigation }) {
 
       <KeyboardAvoidingView 
         style={{ flex: 1 }} 
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={100}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
       >
-        <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <ScrollView 
+          style={styles.scroll} 
+          contentContainerStyle={styles.content} 
+          showsVerticalScrollIndicator={true}
+          keyboardShouldPersistTaps="handled"
+        >
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Basic Information</Text>
             <View style={styles.card}>
@@ -138,35 +119,39 @@ export default function AddBookScreen({ navigation }) {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Content & Assets</Text>
             <View style={styles.card}>
-              <Text style={styles.label}>Description</Text>
-              <TextInput
-                style={[styles.input, styles.textArea]}
-                placeholder="Write a brief summary of the book..."
-                value={description}
-                onChangeText={setDescription}
-                multiline
-                numberOfLines={4}
-                textAlignVertical="top"
-              />
+              <View style={styles.field}>
+                <Text style={styles.label}>Description</Text>
+                <TextInput
+                  style={[styles.input, styles.textArea]}
+                  placeholder="Write a brief summary of the book..."
+                  value={description}
+                  onChangeText={setDescription}
+                  multiline
+                  numberOfLines={4}
+                  textAlignVertical="top"
+                />
+              </View>
 
-              <View style={styles.uploadRow}>
-                <TouchableOpacity style={styles.uploadBox} onPress={pickCover}>
-                  {coverUri ? (
-                    <Image source={{ uri: coverUri }} style={styles.previewImage} />
-                  ) : (
-                    <>
-                      <Ionicons name="image-outline" size={24} color="#3b82f6" />
-                      <Text style={styles.uploadText}>Cover Image</Text>
-                    </>
-                  )}
-                </TouchableOpacity>
+              <View style={styles.field}>
+                <Text style={styles.label}>Cover Image URL</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="https://example.com/cover.jpg"
+                  value={coverUrl}
+                  onChangeText={setCoverUrl}
+                  autoCapitalize="none"
+                />
+              </View>
 
-                <TouchableOpacity style={[styles.uploadBox, pdfUri && styles.uploadBoxSuccess]} onPress={pickPdf}>
-                  <Ionicons name={pdfUri ? "document-check" : "document-outline"} size={24} color={pdfUri ? "#10b981" : "#3b82f6"} />
-                  <Text style={[styles.uploadText, pdfUri && styles.uploadTextSuccess]}>
-                    {pdfUri ? "PDF Attached" : "PDF Document"}
-                  </Text>
-                </TouchableOpacity>
+              <View style={styles.field}>
+                <Text style={styles.label}>PDF Document URL</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="https://example.com/book.pdf"
+                  value={pdfUrl}
+                  onChangeText={setPdfUrl}
+                  autoCapitalize="none"
+                />
               </View>
             </View>
           </View>
@@ -182,6 +167,9 @@ export default function AddBookScreen({ navigation }) {
               <Text style={styles.submitBtnText}>Publish to Library</Text>
             )}
           </TouchableOpacity>
+          
+          {/* Extra spacer for tab bar visibility */}
+          <View style={{ height: 150 }} />
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
@@ -195,7 +183,7 @@ const styles = StyleSheet.create({
   backBtn: { marginRight: 16 },
   headerTitle: { fontSize: 20, fontWeight: '800', color: '#fff' },
   scroll: { flex: 1 },
-  content: { padding: 20, paddingBottom: 40 },
+  content: { padding: 20, paddingBottom: 20, flexGrow: 1 },
   section: { marginBottom: 24 },
   sectionTitle: { fontSize: 16, fontWeight: '800', color: '#1e293b', marginBottom: 12, marginLeft: 4 },
   card: { backgroundColor: '#fff', borderRadius: 20, padding: 16, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 15, elevation: 2 },
@@ -209,13 +197,7 @@ const styles = StyleSheet.create({
   genreChipActive: { backgroundColor: '#3b82f6' },
   genreText: { fontSize: 12, fontWeight: '600', color: '#64748b' },
   genreTextActive: { color: '#fff' },
-  uploadRow: { flexDirection: 'row', gap: 12, marginTop: 12 },
-  uploadBox: { flex: 1, height: 100, borderRadius: 16, borderStyle: 'dashed', borderWidth: 1.5, borderColor: '#cbd5e1', justifyContent: 'center', alignItems: 'center', backgroundColor: '#f8fafc' },
-  uploadBoxSuccess: { borderColor: '#10b981', backgroundColor: '#f0fdf4' },
-  uploadText: { fontSize: 11, fontWeight: '700', color: '#64748b', marginTop: 6 },
-  uploadTextSuccess: { color: '#10b981' },
-  previewImage: { width: '100%', height: '100%', borderRadius: 14 },
-  submitBtn: { backgroundColor: '#1e3a5f', borderRadius: 16, paddingVertical: 18, alignItems: 'center', shadowColor: '#1e3a5f', shadowOpacity: 0.3, shadowRadius: 10, elevation: 5 },
+  submitBtn: { backgroundColor: '#1e3a5f', borderRadius: 16, paddingVertical: 18, alignItems: 'center', shadowColor: '#1e3a5f', shadowOpacity: 0.3, shadowRadius: 10, elevation: 5, marginTop: 10 },
   submitBtnDisabled: { opacity: 0.7 },
   submitBtnText: { color: '#fff', fontSize: 16, fontWeight: '800' },
 });

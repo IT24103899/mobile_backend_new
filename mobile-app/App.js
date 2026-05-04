@@ -55,6 +55,7 @@ import QRScannerScreen from './src/screens/qr/QRScannerScreen';
 
 // Member 7 — Bookshelf
 import BookshelfScreen from './src/screens/bookshelf/BookshelfScreen';
+import WishlistManagementScreen from './src/screens/library/WishlistManagementScreen';
 
 // Admin screens
 import AdminDashboardScreen from './src/screens/admin/AdminDashboardScreen';
@@ -251,6 +252,7 @@ function BookshelfNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="BookshelfMain" component={BookshelfScreen} />
+      <Stack.Screen name="WishlistManagement" component={WishlistManagementScreen} options={{ title: 'My Wishlists' }} />
       <Stack.Screen name="BookDetail" component={BookDetailScreen} />
       <Stack.Screen name="Reader" component={ReaderScreen} options={{ headerShown: true }} />
     </Stack.Navigator>

@@ -106,6 +106,19 @@ export const deleteBookshelfList = (listId) =>
 export const clearBookshelfList = (listType) =>
   api.delete(`bookshelf/lists/${listType}/clear`);
 
+// ─── Wishlists (Custom Named Lists) ────────────────────────────────────────
+export const getWishlists = () => api.get('wishlists');
+
+export const createWishlist = (name) => api.post('wishlists', { name });
+
+export const addBookToWishlist = (wishlistId, bookId) => 
+  api.post(`wishlists/${wishlistId}/books`, { bookId });
+
+export const removeBookFromWishlist = (wishlistId, bookId) => 
+  api.delete(`wishlists/${wishlistId}/books/${bookId}`);
+
+export const deleteWishlist = (id) => api.delete(`wishlists/${id}`);
+
 // ─── Favourites ─────────────────────────────────────────────────────────────
 export const getFavourites = () => api.get('favourites');
 

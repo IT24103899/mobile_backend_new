@@ -99,14 +99,16 @@ const searchBooks = async (req, res) => {
 // @access  Private/Admin
 const createBook = async (req, res) => {
   try {
-    const { title, author, description, category, legacyId } = req.body;
+    const { title, author, description, category, legacyId, coverUrl, pdfUrl } = req.body;
     
     const bookData = {
       title,
       author,
       description,
       category,
-      legacyId: legacyId ? Number(legacyId) : undefined
+      legacyId: legacyId ? Number(legacyId) : undefined,
+      coverUrl: coverUrl || undefined,
+      pdfUrl: pdfUrl || undefined
     };
 
     if (req.files) {
@@ -136,13 +138,16 @@ const updateBook = async (req, res) => {
       return res.status(404).json({ message: 'Book not found' });
     }
 
-    const { title, author, description, category, isAvailable } = req.body;
+    const { title, author, description, category, isAvailable, coverUrl, pdfUrl } = req.body;
     
     book.title = title || book.title;
     book.author = author || book.author;
     book.description = description || book.description;
     book.category = category || book.category;
     if (isAvailable !== undefined) book.isAvailable = isAvailable === 'true' || isAvailable === true;
+    
+    if (coverUrl) book.coverUrl = coverUrl;
+    if (pdfUrl) book.pdfUrl = pdfUrl;
 
     if (req.files) {
       if (req.files.cover) {

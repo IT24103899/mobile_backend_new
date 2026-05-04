@@ -131,14 +131,35 @@ export default function BookshelfScreen({ navigation }) {
                 ListEmptyComponent={
                     <View style={styles.empty}>
                         <Ionicons name="folder-open" size={70} color={colors.border} />
-                        <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>This shelf is totally empty!</Text>
+                        <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>
+                            {activeTab === 'wishlist' ? "Your custom wishlists are empty!" : "This shelf is totally empty!"}
+                        </Text>
 
-                        <TouchableOpacity style={[styles.exploreBtn, { backgroundColor: activeColor }]} onPress={() => navigation.navigate('Books')}>
-                            <Text style={styles.exploreText}>Find Great Books</Text>
-                        </TouchableOpacity>
+                        {activeTab === 'wishlist' ? (
+                            <TouchableOpacity 
+                                style={[styles.exploreBtn, { backgroundColor: activeColor }]} 
+                                onPress={() => navigation.navigate('WishlistManagement')}
+                            >
+                                <Text style={styles.exploreText}>Manage Wishlists</Text>
+                            </TouchableOpacity>
+                        ) : (
+                            <TouchableOpacity style={[styles.exploreBtn, { backgroundColor: activeColor }]} onPress={() => navigation.navigate('Books')}>
+                                <Text style={styles.exploreText}>Find Great Books</Text>
+                            </TouchableOpacity>
+                        )}
                     </View>
                 }
             />
+        )}
+        
+        {activeTab === 'wishlist' && books.length > 0 && (
+            <TouchableOpacity 
+                style={[styles.floatingManageBtn, { backgroundColor: activeColor }]} 
+                onPress={() => navigation.navigate('WishlistManagement')}
+            >
+                <Ionicons name="settings-outline" size={20} color="#fff" />
+                <Text style={styles.floatingManageText}>Manage Lists</Text>
+            </TouchableOpacity>
         )}
     </View>
   );
@@ -174,6 +195,9 @@ const styles = StyleSheet.create({
   author: { fontSize: 14, fontWeight: '700', marginBottom: 12, opacity: 0.7 },
   statusTag: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 12, alignSelf: 'flex-start' },
   statusText: { fontSize: 10, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 0.5 },
+  
+  floatingManageBtn: { position: 'absolute', bottom: 100, right: 20, flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 20, borderRadius: 25, elevation: 10, shadowOpacity: 0.3, shadowRadius: 10 },
+  floatingManageText: { color: '#fff', fontWeight: '800', marginLeft: 8, fontSize: 14 },
 
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   empty: { alignItems: 'center', marginTop: 80, paddingHorizontal: 40 },

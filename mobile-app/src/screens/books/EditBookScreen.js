@@ -16,7 +16,8 @@ export default function EditBookScreen({ route, navigation }) {
   const [author, setAuthor] = useState(book.author || '');
   const [description, setDescription] = useState(book.description || '');
   const [category, setCategory] = useState(book.category || '');
-  const [coverUri, setCoverUri] = useState(null);
+  const [coverUrl, setCoverUrl] = useState(book.coverUrl || '');
+  const [pdfUrl, setPdfUrl] = useState(book.pdfUrl || '');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
@@ -29,27 +30,20 @@ export default function EditBookScreen({ route, navigation }) {
     return Object.keys(e).length === 0;
   };
 
-  const pickCover = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 0.8,
-    });
-    if (!result.canceled) setCoverUri(result.assets[0].uri);
-  };
-
   const handleUpdate = async () => {
     if (!validate()) return;
     setLoading(true);
     try {
-      const formData = new FormData();
-      formData.append('title', title.trim());
-      formData.append('author', author.trim());
-      formData.append('description', description.trim());
-      formData.append('category', category);
-      if (coverUri) {
-        formData.append('cover', { uri: coverUri, name: 'cover.jpg', type: 'image/jpeg' });
-      }
-      await updateBook(book._id, formData);
+      const bookData = {
+        title: title.trim(),
+        author: author.trim(),
+        description: description.trim(),
+        category,
+        coverUrl: coverUrl.trim(),
+        pdfUrl: pdfUrl.trim()
+      };
+      
+      await updateBook(book._id, bookData);
       Alert.alert('Updated!', `"${title}" has been updated.`, [
         { text: 'OK', onPress: () => navigation.goBack() }
       ]);
@@ -76,8 +70,16 @@ export default function EditBookScreen({ route, navigation }) {
   };
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+    <KeyboardAvoidingView 
+      style={{ flex: 1 }} 
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <ScrollView 
+        style={styles.container} 
+        contentContainerStyle={styles.content} 
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={true}
+      >
         <Text style={styles.heading}>Edit Book</Text>
 
         <View style={styles.card}>
@@ -126,12 +128,27 @@ export default function EditBookScreen({ route, navigation }) {
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Update Cover Image</Text>
-          <TouchableOpacity style={styles.uploadBtn} onPress={pickCover}>
-            <Ionicons name="image-outline" size={20} color="#1e3a5f" />
-            <Text style={styles.uploadBtnText}>{coverUri ? '✅ New Cover Selected' : 'Change Cover Image'}</Text>
-          </TouchableOpacity>
-          {!coverUri && <Text style={styles.hint}>Leave blank to keep the existing cover</Text>}
+          <Text style={styles.sectionTitle}>Assets URLs</Text>
+          <View style={styles.field}>
+            <Text style={styles.label}>Cover Image URL</Text>
+            <TextInput
+              style={styles.input}
+              value={coverUrl}
+              onChangeText={setCoverUrl}
+              placeholder="https://example.com/cover.jpg"
+              autoCapitalize="none"
+            />
+          </View>
+          <View style={styles.field}>
+            <Text style={styles.label}>PDF Document URL</Text>
+            <TextInput
+              style={styles.input}
+              value={pdfUrl}
+              onChangeText={setPdfUrl}
+              placeholder="https://example.com/book.pdf"
+              autoCapitalize="none"
+            />
+          </View>
         </View>
 
         <TouchableOpacity style={styles.updateBtn} onPress={handleUpdate} disabled={loading}>
@@ -145,6 +162,9 @@ export default function EditBookScreen({ route, navigation }) {
           <Ionicons name="trash-outline" size={18} color="#e53e3e" />
           <Text style={styles.deleteBtnText}>  Delete Book</Text>
         </TouchableOpacity>
+
+        {/* Extra spacer for tab bar visibility */}
+        <View style={{ height: 150 }} />
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -152,7 +172,7 @@ export default function EditBookScreen({ route, navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f5f7fb' },
-  content: { padding: 16, paddingBottom: 40 },
+  content: { padding: 16, paddingBottom: 20, flexGrow: 1 },
   heading: { fontSize: 22, fontWeight: 'bold', color: '#1e3a5f', marginBottom: 16, marginTop: 8 },
   card: { backgroundColor: '#fff', borderRadius: 14, padding: 18, marginBottom: 14, shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
   sectionTitle: { fontSize: 15, fontWeight: '700', color: '#1e3a5f', marginBottom: 14 },
